@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>庄韵琪Carol — 过程也是意义</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Caveat:wght@400;600&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
+body {
+  font-family: 'Noto Sans SC', 'Inter', sans-serif;
+  color: #1a1a1a;
+  background: #fefcf6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: #FFF000; color: #1a1a1a; }
+
+/* CURSOR GLOW */
+.cursor-glow {
+  position: fixed;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(106,13,173,0.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+body:hover .cursor-glow { opacity: 1; }
+
+/* SECTION COMMON */
+section { position: relative; }
+.section-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #999;
+  margin-bottom: 2rem;
+}
+
+/* HERO — TERMINAL */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #0d1117;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+}
+.terminal-window {
+  width: 100%;
+  max-width: 720px;
+  background: #161b22;
+  border-radius: 12px;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: #1c2129;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+.terminal-dot--red { background: #ff5f57; }
+.terminal-dot--yellow { background: #febc2e; }
+.terminal-dot--green { background: #28c840; }
+.terminal-header-title {
+  flex: 1;
+  text-align: center;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.35);
+  margin-right: 52px;
+}
+.terminal-body {
+  padding: 1.8rem 2rem 2.5rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: clamp(0.85rem, 1.8vw, 1rem);
+  line-height: 1.8;
+  min-height: 360px;
+}
+.terminal-line {
+  opacity: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  transition: opacity 0.3s;
+}
+.terminal-line.visible { opacity: 1; }
+.terminal-line .cmd { color: #6A0DAD; }
+.terminal-line .cmd-text { color: #8b949e; }
+.terminal-line .output { color: #FFF000; }
+.terminal-line .highlight { color: #28c840; }
+.terminal-line .link {
+  color: #F7A946;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+.terminal-cv-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin-top: 0.35rem;
+  padding: 0 14px;
+  border: 1px solid rgba(255,240,0,0.45);
+  border-radius: 999px;
+  background: rgba(255,240,0,0.12);
+  color: #FFF000;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 0 24px rgba(255,240,0,0.12);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.terminal-cv-link:hover {
+  transform: translateY(-1px);
+  background: rgba(255,240,0,0.2);
+  box-shadow: 0 0 32px rgba(255,240,0,0.2);
+}
+.terminal-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.15em;
+  background: #FFF000;
+  vertical-align: text-bottom;
+  animation: cursorBlink 1s step-end infinite;
+}
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 0.8; transform: translateY(0); }
+}
+.hero-scroll {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  animation: fadeUp 0.6s 8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hero-scroll span {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+.hero-scroll-line {
+  width: 1px; height: 40px;
+  background: #FFF000;
+  opacity: 0.4;
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0%, 100% { transform: scaleY(1); opacity: 0.3; }
+  50% { transform: scaleY(1.5); opacity: 0.6; }
+}
+
+/* JOURNEY CHAT */
+.journey-section {
+  padding: 80px 2rem;
+  background: linear-gradient(180deg, #fffef8 0%, #fefcf0 100%);
+}
+.journey-inner {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.journey-headline {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: clamp(1.25rem, 2.4vw, 1.9rem);
+  text-align: center;
+  margin-bottom: 0;
+  color: #1a1a1a;
+  font-weight: 800;
+}
+.journey-headline em {
+  font-style: normal;
+  color: #6A0DAD;
+}
+.journey-window {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  background: #fff;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+}
+.journey-window-bar {
+  background: #f0f0f0;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+.journey-window-dots { display: flex; gap: 6px; }
+.journey-window-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.journey-window-title { font-size: 12px; color: #888; font-weight: 500; }
+.journey-chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fafafa;
+}
+.jchat { max-width: 85%; opacity: 0; transform: translateY(12px) scale(0.96); }
+.jchat.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.jchat-name { font-size: 10px; color: #999; margin-bottom: 2px; font-weight: 600; }
+.jchat-tag {
+  font-size: 10px;
+  color: #6A0DAD;
+  font-weight: 700;
+  margin-bottom: 2px;
+  letter-spacing: 0.05em;
+}
+.jchat-msg {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.jchat--xiaohuang { align-self: flex-start; }
+.jchat--xiaohuang .jchat-msg { background: #6A0DAD; color: #fff; border-bottom-left-radius: 4px; }
+.jchat--carol { align-self: flex-end; }
+.jchat--carol .jchat-msg { background: #FFF000; color: #1a1a1a; border-bottom-right-radius: 4px; }
+.jchat--carol .jchat-name { text-align: right; }
+
+/* TIMELINE */
+.timeline-section {
+  padding: 8rem 2rem;
+  background: #fefcf6;
+}
+.timeline-section-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.timeline-section .section-label { text-align: center; display: block; }
+.timeline-section-headline {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  text-align: center;
+  margin-bottom: 3rem;
+  line-height: 1.2;
+}
+.timeline-section-headline em { font-style: normal; color: #6A0DAD; }
+.timeline-summary {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 4rem;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #555;
+}
+.timeline-summary strong { color: #6A0DAD; }
+.timeline-track {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  padding-top: 20px;
+}
+.timeline-track::before {
+  content: '';
+  position: absolute;
+  top: 26px;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background: linear-gradient(90deg, #FFF000, #6A0DAD, #FFF000);
+  border-radius: 2px;
+}
+.tl-node {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  padding: 0 1rem;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tl-node.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.tl-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #6A0DAD;
+  margin: 0 auto 1rem;
+  position: relative;
+  z-index: 1;
+}
+.tl-node:nth-child(2) .tl-dot { border-color: #FFF000; }
+.tl-node:nth-child(3) .tl-dot { border-color: #6A0DAD; }
+.tl-logo {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.8rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: #f5f2ea;
+  overflow: hidden;
+  padding: 2px;
+}
+.tl-company {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+.tl-period {
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 0.8rem;
+  letter-spacing: 0.05em;
+}
+.tl-role {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+.tl-highlight {
+  font-size: 0.85rem;
+  color: #6A0DAD;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* SKILLS */
+.skills-section {
+  padding: 8rem 2rem;
+  background: linear-gradient(180deg, #fefcf0 0%, #fffef8 100%);
+}
+.skills-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.skills-section .section-label { text-align: center; display: block; }
+.skills-headline {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  text-align: center;
+  margin-bottom: 4rem;
+}
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+.skill-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  transition: transform 0.4s, box-shadow 0.4s;
+  opacity: 0;
+  transform: translateY(30px);
+}
+.skill-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.skill-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(106,13,173,0.1);
+}
+.skill-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1.2rem;
+}
+.skill-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+}
+.skill-desc {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* PROJECTS */
+.project-section {
+  padding: 8rem 2rem;
+  background: #fefcf6;
+}
+.project-section-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.project-section .section-label { text-align: center; display: block; }
+.project-headline {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.project-sub {
+  text-align: center;
+  color: #666;
+  margin-bottom: 4rem;
+  font-size: 1rem;
+}
+.project-module {
+  margin-bottom: 5rem;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.project-module.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.module-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.module-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #6A0DAD;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.module-title {
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+.module-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+.module-text {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: #444;
+}
+.module-text p { margin-bottom: 1rem; }
+.module-text strong { color: #6A0DAD; }
+.module-image {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+}
+.module-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.project-section--ali {
+  background: linear-gradient(180deg, #fefcf6 0%, #f5f2ea 100%);
+}
+
+/* OPINION */
+
+
+.opinion-text.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+
+/* CONTACT */
+.contact {
+  background: #1a2332;
+  color: #fff;
+  padding: 8rem 2rem;
+  text-align: center;
+}
+.contact-inner {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.contact-headline {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin-bottom: 1rem;
+}
+.contact-sub {
+  font-family: 'Caveat', cursive;
+  font-size: 1.3rem;
+  opacity: 0.5;
+  margin-bottom: 3rem;
+}
+.contact-links {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 4rem;
+}
+.contact-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.95rem;
+  opacity: 0.7;
+  transition: all 0.3s;
+  position: relative;
+  padding-bottom: 4px;
+}
+.contact-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0; height: 1px;
+  background: #FFF000;
+  transition: width 0.3s;
+}
+.contact-link:hover { opacity: 1; }
+.contact-link:hover::after { width: 100%; }
+.contact-quote {
+  font-weight: 300;
+  font-size: 0.9rem;
+  opacity: 0.35;
+  line-height: 1.8;
+}
+.footer {
+  background: #1a2332;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 2rem;
+  text-align: center;
+}
+.footer p {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.1em;
+}
+
+/* ANIMATIONS */
+.fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .skills-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .module-content { grid-template-columns: 1fr; }
+  .timeline-track { flex-direction: column; gap: 3rem; }
+  .timeline-track::before { display: none; }
+  .tl-node { text-align: left; padding-left: 2rem; border-left: 3px solid #6A0DAD; }
+  .tl-dot { position: absolute; left: -8px; top: 0; margin: 0; }
+  .terminal-body { padding: 1.2rem 1rem 2rem; font-size: 0.8rem; min-height: 280px; }
+  .terminal-header-title { display: none; }
+  .contact-links { gap: 1.5rem; }
+  .journey-window { max-height: 60vh; }
+}
+@media (max-width: 480px) {
+  .skills-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="terminal-window">
+    <div class="terminal-header">
+      <div class="terminal-dot terminal-dot--red"></div>
+      <div class="terminal-dot terminal-dot--yellow"></div>
+      <div class="terminal-dot terminal-dot--green"></div>
+      <div class="terminal-header-title">carol@universe ~ %</div>
+    </div>
+    <div class="terminal-body" id="terminalBody">
+      <div class="terminal-line visible"><span class="cmd">$ </span><span class="cmd-text">whoami</span></div>
+      <div class="terminal-line visible"><span class="cmd">&gt; </span><span class="output">庄韵琪Carol</span></div>
+      <div class="terminal-line visible">&nbsp;</div>
+      <div class="terminal-line visible"><span class="cmd">$ </span><span class="cmd-text">cat about.md</span></div>
+      <div class="terminal-line visible"><span class="cmd">&gt; </span><span class="output">努力变成AI时代下新的职业画像 | ENTP</span></div>
+      <div class="terminal-line visible"><span class="cmd">&gt; </span><span class="link">💕 关于[她]</span></div>
+      <div class="terminal-line visible"><span class="cmd">&gt; </span><a class="terminal-cv-link" href="https://carolcarol7.github.io/resume/cv.html" target="_blank" rel="noopener">点击查看完整版简历</a></div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+<!-- JOURNEY CHAT -->
+<section class="journey-section" id="journeySection">
+  <div class="journey-inner">
+    <p class="section-label fade-up">My Journey</p>
+    <h2 class="journey-headline fade-up">过程也是<em>意义</em></h2>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="timeline-section">
+  <div class="timeline-section-inner">
+    <p class="section-label fade-up">Timeline</p>
+    <h2 class="timeline-section-headline fade-up">个人<em>经历</em></h2>
+    <div class="timeline-summary fade-up">
+      <strong>3年双大厂全域品牌增长营销经验</strong>，累计操盘增量GMV超9亿，全域总曝光30亿+<br>
+      懂品牌IP、懂全域投放、懂商家增长、懂数据策略、懂AI营销工具落地
+    </div>
+    <div class="timeline-track">
+      <div class="tl-node fade-up">
+        <div class="tl-dot"></div>
+        <div class="tl-logo"><img src="assets/creative-01.png" loading="lazy" decoding="async" alt="浙大" style="width:36px;height:36px;border-radius:8px;object-fit:contain;"></div>
+        <div class="tl-company">浙江大学</div>
+        <div class="tl-period">2020.09 - 2023.06</div>
+        <div class="tl-role">硕士 · 昆虫所</div>
+        <div class="tl-highlight">国家奖学金<br>校级创业项目负责人</div>
+      </div>
+      <div class="tl-node fade-up">
+        <div class="tl-dot"></div>
+        <div class="tl-logo"><img src="assets/creative-02.png" loading="lazy" decoding="async" alt="淘宝" style="width:36px;height:36px;border-radius:8px;object-fit:contain;"></div>
+        <div class="tl-company">阿里巴巴淘天集团</div>
+        <div class="tl-period">2023.06 - 2025.07</div>
+        <div class="tl-role">食品生鲜行业整合营销</div>
+        <div class="tl-highlight">IP心智打造及增长<br>大促全链路营销&amp;传播<br>时令品类专项全链路增长</div>
+      </div>
+      <div class="tl-node fade-up">
+        <div class="tl-dot"></div>
+        <div class="tl-logo"><img src="assets/creative-03.png" loading="lazy" decoding="async" alt="美团" style="width:36px;height:36px;border-radius:8px;object-fit:contain;"></div>
+        <div class="tl-company">美团外卖事业部</div>
+        <div class="tl-period">2025.08 - 至今</div>
+        <div class="tl-role">SKA连锁品牌营销</div>
+        <div class="tl-highlight">SKA品牌超级IP增长<br>联合研发并首发战略新品<br>AI coding新品洞察skill</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+
+
+<!-- MEITUAN PROJECTS -->
+<section class="project-section">
+  <div class="project-section-inner">
+    <p class="section-label fade-up">Meituan</p>
+    <h2 class="project-headline fade-up">美团外卖事业部</h2>
+    <p class="project-sub fade-up">SKA连锁品牌营销 · 2025.08 - 至今</p>
+
+        <div class="project-module fade-up">
+      <div class="module-header">
+        <div class="module-number">1</div>
+        <div class="module-title">SKA品牌IP活动增长全案操盘</div>
+      </div>
+      <div class="module-content">
+        <div class="module-text">
+          <p>独立策划<strong style="color:#6A0DAD;">10+</strong>超级品牌日、<strong style="color:#6A0DAD;">2</strong>场超级发布，深度跨界联名，通过用户/产品/流量数分识别品牌增长机会，全链路内容设计（海报/TVC/联名周边），搭建KOL线上种草矩阵、线下落地造势活动；全域曝光<strong style="color:#6A0DAD;">15亿+</strong>，平台搜索增量<strong style="color:#6A0DAD;">300万+</strong>，GMV增量<strong style="color:#6A0DAD;">2亿+</strong>；</p>
+        </div>
+        <div class="module-image">
+          <img src="assets/creative-04.jpg" loading="lazy" decoding="async" alt="品牌IP全案">
+        </div>
+      </div>
+    </div>
+    <div class="project-module fade-up">
+      <div class="module-header">
+        <div class="module-number">2</div>
+        <div class="module-title">数据驱动新品洞察&新品研发</div>
+      </div>
+      <div class="module-content">
+        <div class="module-text">
+          <p>联合独家首发高价值策略新品，提炼品牌核心卖点，策划从用户洞察→产品定义→站外造势→站内承接的完整产品叙事线；</p>
+        </div>
+        <div class="module-image">
+          <img src="assets/creative-05.jpg" loading="lazy" decoding="async" alt="数据洞察">
+        </div>
+      </div>
+    </div>
+<div class="project-module fade-up">
+      <div class="module-header">
+        <div class="module-number">3</div>
+        <div class="module-title">数据驱动洞察沉淀AI skill</div>
+      </div>
+      <div class="module-content">
+        <div class="module-text">
+          <p>通过AI coding构建供给新品洞察报告skill，服务于产品分析、活动策划、资源投放等场景，迅速将idea落地为prototype发布在站内广场上，提供数据决策支撑；</p>
+        </div>
+        <div class="module-image">
+          <img src="assets/creative-06.jpg" loading="lazy" decoding="async" alt="AI Workflow">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ALIBABA PROJECTS -->
+<section class="project-section project-section--ali">
+  <div class="project-section-inner">
+    <p class="section-label fade-up">Alibaba</p>
+    <h2 class="project-headline fade-up">阿里巴巴淘天集团</h2>
+    <p class="project-sub fade-up">食品生鲜行业整合营销 · 2023.06 - 2025.07</p>
+
+        <div class="project-module fade-up">
+      <div class="module-header">
+        <div class="module-number">1</div>
+        <div class="module-title">行业心智IP增长策略</div>
+      </div>
+      <div class="module-content">
+        <div class="module-text">
+          <p>根据热趋洞察化热点为商业机会，设计「曝光-点击-下单」增长闭环链路，组织IP活动「嗨吃节」<strong style="color:#6A0DAD;">6</strong>场，累计带来增量GMV<strong style="color:#6A0DAD;">7亿+</strong>，提升亿级曝光量级，商品点击率提升+<strong style="color:#6A0DAD;">8pp</strong>，访购率提升+<strong style="color:#6A0DAD;">5pp</strong>，最终兑现增长结果；</p>
+        </div>
+        <div class="module-image">
+          <img src="assets/creative-07.jpg" loading="lazy" decoding="async" alt="嗨吃节">
+        </div>
+      </div>
+    </div>
+    <div class="project-module fade-up">
+      <div class="module-header">
+        <div class="module-number">2</div>
+        <div class="module-title">重磅S级大促2C品效传播&amp;2B行业峰会、选品会</div>
+      </div>
+      <div class="module-content" style="grid-template-columns:1fr;">
+        <div class="module-text">
+          <p>年货节传播：搭建从「内容种草、引流回淘、站内承接转化」全链路增长模型，联合新周刊出品非遗TVC，人民日报转发，线下商圈市集+<strong style="color:#6A0DAD;">100+</strong>KOL种草，<strong style="color:#6A0DAD;">350+</strong>媒体报道，曝光量级<strong style="color:#6A0DAD;">10亿+</strong>。</p>
+          <p>行业峰会：「双11、年货节千人行业峰会」统筹执行，打造行业声量；「年货节千人选品会」超<strong style="color:#6A0DAD;">250</strong>个摊位，<strong style="color:#6A0DAD;">4000+</strong>货品，<strong style="color:#6A0DAD;">5000</strong>人全天参与。</p>
+        </div>
+      </div>
+      <div class="module-content" style="grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:3rem;">
+        <div class="module-image">
+          <img src="assets/creative-08.jpg" loading="lazy" decoding="async" alt="选品会峰会">
+        </div>
+      
+        <div class="module-image">
+          <img src="assets/creative-09.jpg" loading="lazy" decoding="async" alt="年货节大促传播">
+        </div>
+      
+      </div>
+    <div class="project-module fade-up">
+      <div class="module-header">
+        <div class="module-number">3</div>
+        <div class="module-title">品类专项商家分层增长策略</div>
+      </div>
+      <div class="module-content">
+        <div class="module-text">
+          <p>「种草拉新、引流站内、蓄水造势、成交收割」全链路增长，全波段累计成交<strong style="color:#6A0DAD;">11亿+</strong>，撬动商家商业化投入<strong style="color:#6A0DAD;">900万+</strong>，全域种草传播曝光<strong style="color:#6A0DAD;">6亿+</strong>；</p>
+        </div>
+        <div class="module-image">
+          <img src="assets/creative-10.jpg" loading="lazy" decoding="async" alt="端午粽子">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- OPINION -->
+<!-- CONTACT -->
+
+
+
+<section class="skills-section">
+  <div class="skills-inner">
+    <p class="section-label fade-up">Core Skills</p>
+    <h2 class="skills-headline fade-up">四大核心能力</h2>
+    <div class="skills-grid">
+      <div class="skill-card fade-up">
+        <div class="skill-icon">✦</div>
+        <div class="skill-title">品牌IP全域营销</div>
+        <div class="skill-desc">单品牌超级品牌日、跨界联名、线下事件、TVC/物料全案落地</div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-icon">◈</div>
+        <div class="skill-title">数据驱动增长策略</div>
+        <div class="skill-desc">用户/竞品/品类数据诊断、商家分层增长模型、新品趋势洞察</div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-icon">✧</div>
+        <div class="skill-title">全域内容&KOL投放</div>
+        <div class="skill-desc">流量词内容打造、百级KOL矩阵种草、热搜全域传播</div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-icon">◇</div>
+        <div class="skill-title">AI营销效能升级</div>
+        <div class="skill-desc">AI内容生产、营销工作流优化、站内数据洞察AI Skill研发</div>
+      </div>
+    </div>
+  </div>
+</section>
+<footer class="footer">
+  <p>© 2026 庄韵琪Carol · Built with AI & attitude</p>
+</footer>
+
+<script>
+/* TERMINAL TYPEWRITER */
+(function() {
+  const body = document.getElementById('terminalBody');
+  if (!body) return;
+  body.innerHTML = '';
+  const lines = [
+    { type: 'cmd',    text: '$ whoami' },
+    { type: 'output', html: '<span class="output">庄韵琪Carol</span>' },
+    { type: 'blank' },
+    { type: 'cmd',    text: '$ cat about.md' },
+    { type: 'output', html: '<span class="output">努力变成AI时代下新的职业画像 | ENTP</span>' },
+    { type: 'output', html: '<span class="output">钻研一切新鲜有趣的事物</span>' },
+    { type: 'output', html: '<span class="output">分子生物学→互联网营销→?</span>' },
+    { type: 'output', html: '<span class="link">💕 关于[她]</span>' },
+    { type: 'output', html: '<a class="terminal-cv-link" href="https://carolcarol7.github.io/resume/cv.html" target="_blank" rel="noopener">点击查看完整版简历</a>' },
+    { type: 'blank' },
+    { type: 'cmd',    text: '$ echo "Magic is the ceiling, logic is the floor"' },
+    { type: 'output', html: '<span class="highlight">✨</span>' },
+  ];
+
+  const lineEls = [];
+  lines.forEach(line => {
+    const div = document.createElement('div');
+    div.className = 'terminal-line';
+    if (line.type === 'blank') div.innerHTML = '&nbsp;';
+    lineEls.push({ el: div, data: line });
+    body.appendChild(div);
+  });
+
+  const cursorLine = document.createElement('div');
+  cursorLine.className = 'terminal-line visible';
+  cursorLine.innerHTML = '<span class="terminal-cursor"></span>';
+  cursorLine.style.opacity = '0';
+  body.appendChild(cursorLine);
+
+  let lineIdx = 0;
+
+  function typeNextLine() {
+    if (lineIdx >= lineEls.length) {
+      cursorLine.style.opacity = '1';
+      return;
+    }
+    const { el, data } = lineEls[lineIdx];
+    el.classList.add('visible');
+    lineIdx++;
+    if (data.type === 'blank') {
+      setTimeout(typeNextLine, 150);
+      return;
+    }
+    if (data.type === 'cmd') {
+      typeText(el, data.text, 45, () => setTimeout(typeNextLine, 300));
+    } else {
+      const prefix = '<span class="cmd">&gt; </span>';
+      el.innerHTML = prefix;
+      setTimeout(() => {
+        el.innerHTML = prefix + data.html;
+        setTimeout(typeNextLine, 200);
+      }, 120);
+    }
+  }
+
+  function typeText(el, text, speed, callback) {
+    const parts = text.match(/^(\$ )(.*)/);
+    if (parts) {
+      el.innerHTML = '<span class="cmd">$ </span>';
+      const restText = parts[2];
+      let charIdx = 0;
+      function typeChar() {
+        if (charIdx < restText.length) {
+          el.innerHTML = '<span class="cmd">$ </span><span class="cmd-text">' + restText.substring(0, charIdx + 1) + '</span>';
+          charIdx++;
+          setTimeout(typeChar, speed + Math.random() * 30);
+        } else if (callback) callback();
+      }
+      typeChar();
+    } else {
+      el.textContent = '';
+      let charIdx = 0;
+      function typeChar() {
+        if (charIdx < text.length) {
+          el.textContent += text[charIdx];
+          charIdx++;
+          setTimeout(typeChar, speed);
+        } else if (callback) callback();
+      }
+      typeChar();
+    }
+  }
+  setTimeout(typeNextLine, 600);
+})();
+
+/* CHAT ANIMATION */
+(function() {
+  const chatArea = document.getElementById('chatArea');
+  if (!chatArea) return;
+  const messages = chatArea.querySelectorAll('.jchat');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        messages.forEach((msg, i) => {
+          const delay = parseInt(msg.dataset.delay) || i * 300;
+          setTimeout(() => msg.classList.add('visible'), delay);
+        });
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.2 });
+
+  observer.observe(chatArea);
+})();
+
+/* INTERSECTION OBSERVER */
+(function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('is-visible');
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.fade-up, .tl-node, .skill-card, .project-module, .opinion-text').forEach(el => {
+    observer.observe(el);
+  });
+})();
+
+/* MOUSE FOLLOW CURSOR GLOW */
+(function() {
+  const glow = document.getElementById('cursorGlow');
+  if (!glow) return;
+  let mx = 0, my = 0, gx = 0, gy = 0;
+  document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; });
+  function animate() {
+    gx += (mx - gx) * 0.08;
+    gy += (my - gy) * 0.08;
+    glow.style.left = gx + 'px';
+    glow.style.top = gy + 'px';
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* PARALLAX ON SCROLL */
+(function() {
+  const terminalWin = document.querySelector('.terminal-window');
+  if (!terminalWin) return;
+  window.addEventListener('scroll', () => {
+    const st = window.pageYOffset;
+    if (st < window.innerHeight) {
+      const ratio = st / window.innerHeight;
+      terminalWin.style.transform = `translateY(${st * 0.15}px)`;
+      terminalWin.style.opacity = 1 - ratio * 0.6;
+    }
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
